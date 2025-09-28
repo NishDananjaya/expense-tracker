@@ -47,10 +47,10 @@ const AiAssistant: React.FC<AiAssistantProps> = ({ expenses, earnings, userName,
         setError(null);
 
         try {
-            if (!process.env.API_KEY) {
-                throw new Error("API key is missing.");
-            }
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            // NOTE: Using the API key provided by the user for this specific environment.
+            // In a production application, this key should be stored securely and not hardcoded.
+            const apiKey = "AIzaSyAKa7V0kTZgNDRW3AH-m5EI8EUGzQwa0wE";
+            const ai = new GoogleGenAI({ apiKey: apiKey });
             
             const financialDataSummary = `
                 Here is a summary of the user's recent financial data (in LKR). Use this data to answer the user's question:
