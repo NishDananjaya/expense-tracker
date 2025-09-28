@@ -6,43 +6,58 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-android:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      # Step 1: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
+      # Step 2: Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
+      # Step 3: Install dependencies (including Capacitor)
       - name: Install dependencies
-        run: npm install
-        working-directory: ./  # optional if project is in root
+        run: npm ci   # ci is better for CI/CD
+        working-directory: ./    # replace if your project is in subfolder
 
+      # Step 4: Build web assets (Vite)
       - name: Build web assets
         run: npm run build
-        working-directory: ./  # same folder
+        working-directory: ./
 
-      - name: Sync Capacitor
+      # Step 5: Ensure Capacitor Android platform exists
+      - name: Install Capacitor Android
+        run: npm install @capacitor/android
+        working-directory: ./
+
+      # Step 6: Sync Capacitor (after build)
+      - name: Sync Capacitor Android
         run: npx cap sync android
-        working-directory: ./  # same folder
+        working-directory: ./
 
-      - name: Setup Java
+      # Step 7: Setup Java (required by Gradle)
+      - name: Setup Java JDK
         uses: actions/setup-java@v3
         with:
           distribution: temurin
           java-version: 17
 
-      - name: Build APK
+      # Step 8: Build Android APK
+      - name: Build Android APK
         run: |
           cd android
+          ./gradlew clean
           ./gradlew assembleDebug
 
+      # Step 9: Upload APK artifact
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-debug.apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7
