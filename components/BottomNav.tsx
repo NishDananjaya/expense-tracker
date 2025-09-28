@@ -19,11 +19,13 @@ const ChartIcon = ({ active }: { active: boolean }) => (
   </svg>
 );
 
-const ReportsIcon = ({ active }: { active: boolean }) => (
+const ReportIcon = ({ active }: { active: boolean }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={`h-7 w-7 transition-all duration-300 ${active ? 'text-gray-900' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V7a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
     </svg>
 );
+
 
 const ProfileIcon = ({ active }: { active: boolean }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={`h-7 w-7 transition-all duration-300 ${active ? 'text-gray-900' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -36,7 +38,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeScreen, setActiveScreen, on
   const navItems = [
     { screen: Screen.Home, icon: HomeIcon, label: 'Home' },
     { screen: Screen.Insights, icon: ChartIcon, label: 'Insights' },
-    { screen: Screen.Reports, icon: ReportsIcon, label: 'Reports' },
+    { screen: Screen.Reports, icon: ReportIcon, label: 'Reports' },
     { screen: Screen.Profile, icon: ProfileIcon, label: 'Profile' },
   ];
 

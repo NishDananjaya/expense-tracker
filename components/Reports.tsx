@@ -176,6 +176,8 @@ const YearlyPieChart: React.FC<{ expenses: (Expense[] | Earning[]), year: number
             .filter(item => item.value > 0);
     }, [expenses, year]);
 
+    const totalValue = useMemo(() => chartData.reduce((sum, entry) => sum + entry.value, 0), [chartData]);
+
     const EXPENSE_COLORS = ['#f87171', '#f472b6', '#e879f9', '#c084fc', '#a78bfa', '#818cf8', '#60a5fa', '#38bdf8', '#22d3ee', '#2dd4bf', '#facc15', '#fb923c'];
     const EARNING_COLORS = ['#34d399', '#6ee7b7', '#a7f3d0', '#059669', '#047857', '#065f46', '#10b981', '#14b8a6', '#2dd4bf', '#6d28d9', '#8b5cf6', '#a78bfa'];
     const COLORS = isExpense ? EXPENSE_COLORS : EARNING_COLORS;
@@ -186,8 +188,6 @@ const YearlyPieChart: React.FC<{ expenses: (Expense[] | Earning[]), year: number
             <p>No {type} data for this year.</p>
         </div>;
     }
-
-    const totalValue = useMemo(() => chartData.reduce((sum, entry) => sum + entry.value, 0), [chartData]);
     
     const onPieClick = (_: any, index: number) => {
         setActiveIndex(index === activeIndex ? null : index);
@@ -231,13 +231,13 @@ const YearlyPieChart: React.FC<{ expenses: (Expense[] | Earning[]), year: number
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                     {activeData ? (
                         <>
-                            <span className="text-3xl font-bold text-gray-800">LKR {activeData.value.toFixed(2)}</span>
-                            <span className="text-gray-500 font-semibold">{activeData.name}</span>
+                            <span className="text-xl font-bold text-gray-800">LKR {activeData.value.toFixed(2)}</span>
+                            <span className="text-xs text-gray-500 font-semibold">{activeData.name}</span>
                         </>
                     ) : (
                         <>
-                            <span className="text-3xl font-bold text-gray-800">LKR {totalValue.toFixed(2)}</span>
-                            <span className="text-gray-500 font-semibold">Total {isExpense ? 'Spent' : 'Earned'}</span>
+                            <span className="text-xl font-bold text-gray-800">LKR {totalValue.toFixed(2)}</span>
+                            <span className="text-xs text-gray-500 font-semibold">Total {isExpense ? 'Spent' : 'Earned'}</span>
                         </>
                     )}
                 </div>
