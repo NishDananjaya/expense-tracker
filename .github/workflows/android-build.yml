@@ -3,37 +3,41 @@ name: Build Android APK
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
 
-      # Step 1: Setup Node
-      - uses: actions/setup-node@v3
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
           node-version: 18
 
-      # Step 2: Go to project root (if needed)
-      - run: cd ./   # Replace ./ with path to your project root if not top-level
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./  # optional if project is in root
 
-      # Step 3: Install dependencies including Capacitor CLI
-      - run: npm install @capacitor/cli @capacitor/core @capacitor/android
+      - name: Build web assets
+        run: npm run build
+        working-directory: ./  # same folder
 
-      # Step 4: Build web assets
-      - run: npm run build
+      - name: Sync Capacitor
+        run: npx cap sync android
+        working-directory: ./  # same folder
 
-      # Step 5: Sync Capacitor (must be after install + build)
-      - run: npx cap sync android
-
-
-      - uses: actions/setup-java@v3
+      - name: Setup Java
+        uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: temurin
+          java-version: 17
 
-      - run: |
+      - name: Build APK
+        run: |
           cd android
           ./gradlew assembleDebug
 
