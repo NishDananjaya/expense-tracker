@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import { Expense, Category, Goal } from '../types';
 import { CATEGORIES_CONFIG, FINANCIAL_TIPS } from '../constants';
@@ -9,9 +8,13 @@ interface InsightsProps {
   goal: Goal;
 }
 
-const Insights: React.FC<InsightsProps> = ({ expenses, goal }) => {
-  const [timeframe, setTimeframe] = useState<'weekly' | 'monthly'>('weekly');
+const EmptyState: React.FC<{ message: string }> = ({ message }) => (
+    <div className="text-center py-10 h-64 flex items-center justify-center">
+        <p className="text-gray-500">{message}</p>
+    </div>
+);
 
+const Insights: React.FC<InsightsProps> = ({ expenses, goal }) => {
   const categoryData = Object.values(Category).map(category => {
     const total = expenses
       .filter(e => e.category === category)
@@ -21,7 +24,6 @@ const Insights: React.FC<InsightsProps> = ({ expenses, goal }) => {
   
   const colors = categoryData.map(d => CATEGORIES_CONFIG[d.name as Category].color);
 
-  // For Bar Chart - Weekly spending
   const getWeekData = () => {
     const data = Array(7).fill(0).map((_, i) => {
       const d = new Date();
@@ -40,7 +42,6 @@ const Insights: React.FC<InsightsProps> = ({ expenses, goal }) => {
         dayData.spending += expense.amount;
       }
     });
-
     return data;
   };
   const weekData = getWeekData();
@@ -48,65 +49,76 @@ const Insights: React.FC<InsightsProps> = ({ expenses, goal }) => {
 
 
   return (
-    <div className="space-y-8 pb-24">
+    <div className="space-y-8 pb-24 animate-fade-in-up">
       <h1 className="text-3xl font-bold text-gray-800">Insights</h1>
 
       <MotivationalMessage weeklyTotal={weeklyTotal} goal={goal} />
 
       <div className="bg-white/60 p-4 rounded-2xl shadow-lg backdrop-blur-sm border border-white/30">
         <h2 className="text-xl font-semibold text-gray-700 mb-2">Weekly Spending</h2>
-        <div className="w-full h-64">
-           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={weekData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
-              <XAxis dataKey="name" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" />
-              <Tooltip
-                contentStyle={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                    borderRadius: '1rem'
-                }}
-              />
-              <Legend />
-              <Bar dataKey="spending" fill="#8884d8" name="Spending (LKR)" radius={[10, 10, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      <div className="bg-white/60 p-4 rounded-2xl shadow-lg backdrop-blur-sm border border-white/30">
-        <h2 className="text-xl font-semibold text-gray-700 mb-2">Category Breakdown</h2>
-         <div style={{ width: '100%', height: 300 }}>
-            <ResponsiveContainer>
-                <PieChart>
-                <Pie
-                    data={categoryData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={100}
-                    innerRadius={60}
-                    fill="#8884d8"
-                    dataKey="value"
-                    paddingAngle={5}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                >
-                    {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-                    ))}
-                </Pie>
-                <Tooltip 
+         {expenses.length === 0 ? <EmptyState message="Add some expenses to see your weekly spending." /> : (
+            <div className="w-full h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={weekData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
+                  <defs>
+                    <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#60A5FA" />
+                      <stop offset="100%" stopColor="#A78BFA" />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="name" stroke="#6b7280" />
+                  <YAxis stroke="#6b7280" />
+                  <Tooltip
                     contentStyle={{
                         backgroundColor: 'rgba(255, 255, 255, 0.8)',
                         backdropFilter: 'blur(10px)',
                         border: '1px solid rgba(255, 255, 255, 0.3)',
                         borderRadius: '1rem'
                     }}
-                />
-                </PieChart>
-            </ResponsiveContainer>
-        </div>
+                  />
+                  <Legend />
+                  <Bar dataKey="spending" fill="url(#barGradient)" name="Spending (LKR)" radius={[10, 10, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+        )}
+      </div>
+
+      <div className="bg-white/60 p-4 rounded-2xl shadow-lg backdrop-blur-sm border border-white/30">
+        <h2 className="text-xl font-semibold text-gray-700 mb-2">Category Breakdown</h2>
+        {categoryData.length === 0 ? <EmptyState message="No spending data for category breakdown." /> : (
+          <div style={{ width: '100%', height: 300 }}>
+              <ResponsiveContainer>
+                  <PieChart>
+                  <Pie
+                      data={categoryData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={100}
+                      innerRadius={60}
+                      fill="#8884d8"
+                      dataKey="value"
+                      paddingAngle={5}
+                      // FIX: The `percent` prop from recharts can be undefined. Coalesce to 0 to prevent arithmetic error.
+                      label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                  >
+                      {categoryData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                      ))}
+                  </Pie>
+                  <Tooltip 
+                      contentStyle={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                          backdropFilter: 'blur(10px)',
+                          border: '1px solid rgba(255, 255, 255, 0.3)',
+                          borderRadius: '1rem'
+                      }}
+                  />
+                  </PieChart>
+              </ResponsiveContainer>
+          </div>
+        )}
       </div>
       
       <TipsCarousel />
@@ -116,9 +128,9 @@ const Insights: React.FC<InsightsProps> = ({ expenses, goal }) => {
 
 const MotivationalMessage: React.FC<{ weeklyTotal: number, goal: Goal }> = ({ weeklyTotal, goal }) => {
     let message = "Keep track of your spending to reach your goals!";
-    if (weeklyTotal < goal.weekly) {
+    if (weeklyTotal > 0 && weeklyTotal < goal.weekly) {
         message = `Great job! You're LKR ${(goal.weekly - weeklyTotal).toFixed(2)} under your weekly goal.`;
-    } else {
+    } else if (weeklyTotal > goal.weekly) {
         message = `You've exceeded your weekly goal by LKR ${(weeklyTotal - goal.weekly).toFixed(2)}. Let's review!`;
     }
 
@@ -130,7 +142,7 @@ const MotivationalMessage: React.FC<{ weeklyTotal: number, goal: Goal }> = ({ we
 };
 
 const TipsCarousel: React.FC = () => {
-    const [currentTip, setCurrentTip] = useState(0);
+    const [currentTip, setCurrentTip] = React.useState(0);
 
     const nextTip = () => {
         setCurrentTip((prev) => (prev + 1) % FINANCIAL_TIPS.length);

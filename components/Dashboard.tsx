@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Expense, Category } from '../types';
 import { CATEGORIES_CONFIG } from '../constants';
@@ -20,7 +19,7 @@ const Dashboard: React.FC<DashboardProps> = ({ expenses }) => {
   }, {} as Record<Category, number>);
 
   return (
-    <div className="space-y-8 pb-24">
+    <div className="space-y-8 pb-24 animate-fade-in-up">
       <Header totalToday={totalToday} />
       <CategoryGrid categoryTotals={categoryTotals} />
       <RecentTransactions expenses={todayExpenses} />
@@ -51,7 +50,7 @@ const CategoryGrid: React.FC<{ categoryTotals: Record<Category, number> }> = ({ 
 const CategoryCard: React.FC<{ category: Category; total: number }> = ({ category, total }) => {
   const config = CATEGORIES_CONFIG[category];
   return (
-    <div className="bg-white/60 p-4 rounded-2xl shadow-md backdrop-blur-sm border border-white/30 transform hover:-translate-y-1 transition-transform duration-300">
+    <div className="bg-gradient-to-br from-white/80 to-white/50 p-4 rounded-2xl shadow-lg backdrop-blur-sm border border-white/40 transform hover:-translate-y-1.5 transition-transform duration-300">
       <div className="flex items-center space-x-3">
         <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl bg-gradient-to-br ${config.gradient} shadow-inner`}>
           {config.icon}
@@ -82,7 +81,7 @@ const RecentTransactions: React.FC<{ expenses: Expense[] }> = ({ expenses }) => 
 const TransactionItem: React.FC<{ expense: Expense }> = ({ expense }) => {
   const config = CATEGORIES_CONFIG[expense.category];
   return (
-    <div className="flex items-center justify-between p-3 bg-white/80 rounded-xl shadow-sm backdrop-blur-sm border border-white/30">
+    <div className="flex items-center justify-between p-3 bg-gradient-to-br from-white/90 to-white/70 rounded-xl shadow-md backdrop-blur-sm border border-white/40">
       <div className="flex items-center space-x-4">
         <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl bg-gradient-to-br ${config.gradient}`}>
           {config.icon}

@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Expense, Goal, Screen } from './types';
 import BottomNav from './components/BottomNav';
@@ -6,12 +5,11 @@ import Dashboard from './components/Dashboard';
 import Insights from './components/Insights';
 import Profile from './components/Profile';
 import AddExpenseModal from './components/AddExpenseModal';
-import { sampleExpenses } from './constants';
 
 const App: React.FC = () => {
   const [activeScreen, setActiveScreen] = useState<Screen>(Screen.Home);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [expenses, setExpenses] = useState<Expense[]>(sampleExpenses);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [goal, setGoal] = useState<Goal>({ daily: 100, weekly: 700 });
 
   const handleAddExpense = useCallback((expense: Omit<Expense, 'id' | 'date'>) => {

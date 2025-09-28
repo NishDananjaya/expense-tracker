@@ -1,4 +1,3 @@
-
 import { Category, Expense } from './types';
 
 export const CATEGORIES_CONFIG: { [key in Category]: { icon: string; color: string; gradient: string } } = {
@@ -29,15 +28,7 @@ export const CATEGORIES_CONFIG: { [key in Category]: { icon: string; color: stri
   },
 };
 
-export const sampleExpenses: Expense[] = [
-    { id: 1, amount: 25, category: Category.Food, notes: 'Lunch with colleagues', date: new Date().toISOString().split('T')[0] },
-    { id: 2, amount: 50, category: Category.Shopping, notes: 'New T-shirt', date: new Date().toISOString().split('T')[0] },
-    { id: 3, amount: 15, category: Category.Travel, notes: 'Metro ride', date: new Date().toISOString().split('T')[0] },
-    { id: 4, amount: 120, category: Category.Bills, notes: 'Electricity bill', date: '2023-10-25' },
-    { id: 5, amount: 35, category: Category.Food, notes: 'Dinner', date: '2023-10-26' },
-    { id: 6, amount: 80, category: Category.Other, notes: 'Movie tickets', date: '2023-10-24' },
-    { id: 7, amount: 10, category: Category.Food, notes: 'Coffee', date: new Date().toISOString().split('T')[0] },
-];
+export const sampleExpenses: Expense[] = [];
 
 export const FINANCIAL_TIPS = [
     "Cook at home 3 times a week to save up to LKR 2000 monthly.",

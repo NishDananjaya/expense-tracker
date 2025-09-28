@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Category } from '../types';
 import { CATEGORIES_CONFIG } from '../constants';
@@ -25,7 +24,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ onClose, onAddExpense
 
   return (
     <div className="absolute inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gradient-to-br from-gray-50 to-blue-100 w-full max-w-sm rounded-3xl shadow-2xl p-6 space-y-6 relative animate-fade-in-up">
+      <div className="bg-gradient-to-br from-gray-100 via-blue-100 to-purple-100 w-full max-w-sm rounded-3xl shadow-2xl p-6 space-y-6 relative animate-fade-in-up">
         <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -41,7 +40,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ onClose, onAddExpense
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
-                className="w-full text-center text-4xl font-bold bg-transparent border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none py-2 transition-colors"
+                className="w-full text-center text-4xl font-bold text-gray-800 bg-transparent border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none py-2 transition-colors"
             />
         </div>
         
@@ -66,7 +65,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ onClose, onAddExpense
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="e.g., Lunch with friends"
-                className="w-full p-3 mt-1 bg-white/80 rounded-lg border-2 border-transparent focus:border-blue-500 focus:outline-none transition-all"
+                className="w-full p-3 mt-1 bg-white/80 rounded-lg border-2 border-transparent text-gray-800 focus:border-blue-500 focus:outline-none transition-all"
             />
         </div>
         
@@ -78,15 +77,6 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ onClose, onAddExpense
             Add Expense
         </button>
       </div>
-      <style>{`
-        @keyframes fade-in-up {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in-up {
-          animation: fade-in-up 0.3s ease-out forwards;
-        }
-      `}</style>
     </div>
   );
 };
@@ -99,14 +89,16 @@ interface CategoryButtonProps {
 
 const CategoryButton: React.FC<CategoryButtonProps> = ({ category, isSelected, onClick }) => {
     const config = CATEGORIES_CONFIG[category];
-    const baseStyle = "flex flex-col items-center justify-center p-2 rounded-xl cursor-pointer transition-all duration-200";
-    const selectedStyle = "bg-white shadow-inner scale-95";
-    const unselectedStyle = "bg-white/70 shadow-md hover:shadow-lg";
+    const baseStyle = "flex flex-col items-center justify-center p-2 rounded-xl cursor-pointer transition-all duration-300 border-2";
+    const selectedStyle = `bg-white shadow-inner scale-105`;
+    const unselectedStyle = "bg-white/70 shadow-md hover:shadow-lg border-transparent";
+    const dynamicStyle = isSelected ? { borderColor: config.color } : {};
     
     return (
         <div
             onClick={onClick}
             className={`${baseStyle} ${isSelected ? selectedStyle : unselectedStyle}`}
+            style={dynamicStyle}
         >
             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl bg-gradient-to-br ${config.gradient} mb-1`}>
                 {config.icon}
