@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import { Expense, Category, Goal } from '../types';
 import { CATEGORIES_CONFIG, FINANCIAL_TIPS } from '../constants';
@@ -15,16 +15,22 @@ const EmptyState: React.FC<{ message: string }> = ({ message }) => (
 );
 
 const Insights: React.FC<InsightsProps> = ({ expenses, goal }) => {
-  const categoryData = Object.values(Category).map(category => {
-    const total = expenses
-      .filter(e => e.category === category)
-      .reduce((sum, e) => sum + e.amount, 0);
-    return { name: category, value: total };
-  }).filter(d => d.value > 0);
+  const categoryData = useMemo(() => 
+    Object.values(Category).map(category => {
+      const total = expenses
+        .filter(e => e.category === category)
+        .reduce((sum, e) => sum + e.amount, 0);
+      return { name: category, value: total };
+    }).filter(d => d.value > 0),
+    [expenses]
+  );
   
-  const colors = categoryData.map(d => CATEGORIES_CONFIG[d.name as Category].color);
+  const colors = useMemo(() => 
+    categoryData.map(d => CATEGORIES_CONFIG[d.name as Category].color),
+    [categoryData]
+  );
 
-  const getWeekData = () => {
+  const weekData = useMemo(() => {
     const data = Array(7).fill(0).map((_, i) => {
       const d = new Date();
       d.setDate(d.getDate() - i);
@@ -43,9 +49,12 @@ const Insights: React.FC<InsightsProps> = ({ expenses, goal }) => {
       }
     });
     return data;
-  };
-  const weekData = getWeekData();
-  const weeklyTotal = weekData.reduce((sum, day) => sum + day.spending, 0);
+  }, [expenses]);
+
+  const weeklyTotal = useMemo(() => 
+    weekData.reduce((sum, day) => sum + day.spending, 0),
+    [weekData]
+  );
 
 
   return (
@@ -54,7 +63,7 @@ const Insights: React.FC<InsightsProps> = ({ expenses, goal }) => {
 
       <MotivationalMessage weeklyTotal={weeklyTotal} goal={goal} />
 
-      <div className="bg-white/60 p-4 rounded-2xl shadow-lg backdrop-blur-sm border border-white/30">
+      <div className="bg-white/50 p-4 rounded-2xl shadow-lg border border-white/30">
         <h2 className="text-xl font-semibold text-gray-700 mb-2">Weekly Spending</h2>
          {expenses.length === 0 ? <EmptyState message="Add some expenses to see your weekly spending." /> : (
             <div className="w-full h-64">
@@ -84,7 +93,7 @@ const Insights: React.FC<InsightsProps> = ({ expenses, goal }) => {
         )}
       </div>
 
-      <div className="bg-white/60 p-4 rounded-2xl shadow-lg backdrop-blur-sm border border-white/30">
+      <div className="bg-white/50 p-4 rounded-2xl shadow-lg border border-white/30">
         <h2 className="text-xl font-semibold text-gray-700 mb-2">Category Breakdown</h2>
         {categoryData.length === 0 ? <EmptyState message="No spending data for category breakdown." /> : (
           <div style={{ width: '100%', height: 300 }}>
@@ -100,7 +109,7 @@ const Insights: React.FC<InsightsProps> = ({ expenses, goal }) => {
                       fill="#8884d8"
                       dataKey="value"
                       paddingAngle={5}
-                      // FIX: The `percent` prop from recharts can be undefined. Coalesce to 0 to prevent arithmetic error.
+                      // FIX: The `percent` prop from recharts can be undefined. Coalesce to 0 to prevent an arithmetic error.
                       label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                   >
                       {categoryData.map((entry, index) => (
@@ -126,7 +135,7 @@ const Insights: React.FC<InsightsProps> = ({ expenses, goal }) => {
   );
 };
 
-const MotivationalMessage: React.FC<{ weeklyTotal: number, goal: Goal }> = ({ weeklyTotal, goal }) => {
+const MotivationalMessage = React.memo<{ weeklyTotal: number, goal: Goal }>(({ weeklyTotal, goal }) => {
     let message = "Keep track of your spending to reach your goals!";
     if (weeklyTotal > 0 && weeklyTotal < goal.weekly) {
         message = `Great job! You're LKR ${(goal.weekly - weeklyTotal).toFixed(2)} under your weekly goal.`;
@@ -139,7 +148,7 @@ const MotivationalMessage: React.FC<{ weeklyTotal: number, goal: Goal }> = ({ we
             <p className="font-semibold">{message}</p>
         </div>
     );
-};
+});
 
 const TipsCarousel: React.FC = () => {
     const [currentTip, setCurrentTip] = React.useState(0);
@@ -149,7 +158,7 @@ const TipsCarousel: React.FC = () => {
     };
 
     return (
-        <div className="bg-white/60 p-4 rounded-2xl shadow-lg backdrop-blur-sm border border-white/30 relative">
+        <div className="bg-white/50 p-4 rounded-2xl shadow-lg border border-white/30 relative">
             <h2 className="text-xl font-semibold text-gray-700 mb-2">Financial Hacks</h2>
             <p className="text-gray-600 min-h-[60px]">{FINANCIAL_TIPS[currentTip]}</p>
             <button 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Expense, Category } from '../types';
 import { CATEGORIES_CONFIG } from '../constants';
 
@@ -7,16 +7,27 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ expenses }) => {
-  const today = new Date().toISOString().split('T')[0];
-  const todayExpenses = expenses.filter(e => e.date === today);
-  const totalToday = todayExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const today = useMemo(() => new Date().toISOString().split('T')[0], []);
 
-  const categoryTotals = Object.values(Category).reduce((acc, category) => {
-    acc[category] = expenses
-      .filter(e => e.category === category)
-      .reduce((sum, e) => sum + e.amount, 0);
-    return acc;
-  }, {} as Record<Category, number>);
+  const todayExpenses = useMemo(() => 
+    expenses.filter(e => e.date === today),
+    [expenses, today]
+  );
+  
+  const totalToday = useMemo(() => 
+    todayExpenses.reduce((sum, e) => sum + e.amount, 0),
+    [todayExpenses]
+  );
+
+  const categoryTotals = useMemo(() => 
+    Object.values(Category).reduce((acc, category) => {
+      acc[category] = expenses
+        .filter(e => e.category === category)
+        .reduce((sum, e) => sum + e.amount, 0);
+      return acc;
+    }, {} as Record<Category, number>),
+    [expenses]
+  );
 
   return (
     <div className="space-y-8 pb-24 animate-fade-in-up">
@@ -27,16 +38,16 @@ const Dashboard: React.FC<DashboardProps> = ({ expenses }) => {
   );
 };
 
-const Header: React.FC<{ totalToday: number }> = ({ totalToday }) => (
+const Header = React.memo<{ totalToday: number }>(({ totalToday }) => (
   <div className="text-center">
     <p className="text-gray-500 text-lg">Today's Spending</p>
     <h1 className="text-5xl font-bold text-gray-800 tracking-tighter">
       LKR {totalToday.toFixed(2)}
     </h1>
   </div>
-);
+));
 
-const CategoryGrid: React.FC<{ categoryTotals: Record<Category, number> }> = ({ categoryTotals }) => (
+const CategoryGrid = React.memo<{ categoryTotals: Record<Category, number> }>(({ categoryTotals }) => (
     <div>
         <h2 className="text-xl font-semibold text-gray-700 mb-4">Categories</h2>
         <div className="grid grid-cols-2 gap-5">
@@ -45,12 +56,12 @@ const CategoryGrid: React.FC<{ categoryTotals: Record<Category, number> }> = ({ 
         ))}
         </div>
     </div>
-);
+));
 
 const CategoryCard: React.FC<{ category: Category; total: number }> = ({ category, total }) => {
   const config = CATEGORIES_CONFIG[category];
   return (
-    <div className="bg-gradient-to-br from-white/80 to-white/50 p-4 rounded-2xl shadow-lg backdrop-blur-sm border border-white/40 transform hover:-translate-y-1.5 transition-transform duration-300">
+    <div className="bg-white/70 p-4 rounded-2xl shadow-lg border border-white/40 transform hover:-translate-y-1.5 transition-transform duration-300">
       <div className="flex items-center space-x-3">
         <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl bg-gradient-to-br ${config.gradient} shadow-inner`}>
           {config.icon}
@@ -65,7 +76,7 @@ const CategoryCard: React.FC<{ category: Category; total: number }> = ({ categor
 };
 
 
-const RecentTransactions: React.FC<{ expenses: Expense[] }> = ({ expenses }) => (
+const RecentTransactions = React.memo<{ expenses: Expense[] }>(({ expenses }) => (
   <div>
     <h2 className="text-xl font-semibold text-gray-700 mb-4">Today's Transactions</h2>
     <div className="space-y-3">
@@ -76,12 +87,12 @@ const RecentTransactions: React.FC<{ expenses: Expense[] }> = ({ expenses }) => 
       )}
     </div>
   </div>
-);
+));
 
 const TransactionItem: React.FC<{ expense: Expense }> = ({ expense }) => {
   const config = CATEGORIES_CONFIG[expense.category];
   return (
-    <div className="flex items-center justify-between p-3 bg-gradient-to-br from-white/90 to-white/70 rounded-xl shadow-md backdrop-blur-sm border border-white/40">
+    <div className="flex items-center justify-between p-3 bg-white/60 rounded-xl shadow-md border border-white/40">
       <div className="flex items-center space-x-4">
         <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl bg-gradient-to-br ${config.gradient}`}>
           {config.icon}

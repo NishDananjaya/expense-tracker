@@ -64,7 +64,7 @@ const App: React.FC = () => {
   return (
     <div className="bg-gray-100 min-h-screen flex items-center justify-center">
       <div className="w-full max-w-[420px] h-[850px] bg-gradient-to-br from-white via-blue-50 to-purple-50 rounded-[40px] shadow-2xl overflow-hidden relative flex flex-col font-sans">
-        <main className="flex-grow overflow-y-auto p-6 scroll-smooth">
+        <main className="flex-grow overflow-y-auto p-6 scroll-smooth scroll-container">
           {renderScreen()}
         </main>
         
