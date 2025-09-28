@@ -5,11 +5,15 @@ import Dashboard from './components/Dashboard';
 import Insights from './components/Insights';
 import Profile from './components/Profile';
 import AddExpenseModal from './components/AddExpenseModal';
+import WelcomeModal from './components/WelcomeModal';
 
 const App: React.FC = () => {
   const [activeScreen, setActiveScreen] = useState<Screen>(Screen.Home);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+
+  const [userName, setUserName] = useState<string | null>(() => localStorage.getItem('userName'));
+
   const [expenses, setExpenses] = useState<Expense[]>(() => {
     try {
       const savedExpenses = localStorage.getItem('expenses');
@@ -37,34 +41,60 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('goal', JSON.stringify(goal));
   }, [goal]);
+  
+  useEffect(() => {
+    if (userName) {
+      localStorage.setItem('userName', userName);
+    }
+  }, [userName]);
 
-  const handleAddExpense = useCallback((expense: Omit<Expense, 'id' | 'date'>) => {
-    const newExpense: Expense = {
-      ...expense,
-      id: Date.now(),
-      date: new Date().toISOString().split('T')[0],
-    };
-    setExpenses(prevExpenses => [newExpense, ...prevExpenses]);
+  const handleSaveExpense = useCallback((expenseData: Omit<Expense, 'date'>) => {
+    setExpenses(prevExpenses => {
+      const isEditing = expenseData.id !== undefined;
+      if (isEditing) {
+        return prevExpenses.map(exp => 
+          exp.id === expenseData.id ? { ...exp, ...expenseData, date: exp.date } : exp
+        );
+      } else {
+        const newExpense: Expense = {
+          ...expenseData,
+          id: Date.now(),
+          date: new Date().toISOString().split('T')[0],
+        };
+        return [newExpense, ...prevExpenses];
+      }
+    });
     setIsModalOpen(false);
+    setEditingExpense(null);
   }, []);
+
+  const handleEditClick = (expense: Expense) => {
+    setEditingExpense(expense);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingExpense(null);
+  }
 
   const renderScreen = () => {
     switch (activeScreen) {
       case Screen.Home:
-        return <Dashboard expenses={expenses} />;
+        return <Dashboard expenses={expenses} onEditExpense={handleEditClick} />;
       case Screen.Insights:
         return <Insights expenses={expenses} goal={goal} />;
       case Screen.Profile:
-        return <Profile goal={goal} setGoal={setGoal} />;
+        return <Profile goal={goal} setGoal={setGoal} userName={userName} />;
       default:
-        return <Dashboard expenses={expenses} />;
+        return <Dashboard expenses={expenses} onEditExpense={handleEditClick} />;
     }
   };
 
   return (
     <div className="bg-gray-100 min-h-screen flex items-center justify-center">
       <div className="w-full max-w-[420px] h-[850px] bg-gradient-to-br from-white via-blue-50 to-purple-50 rounded-[40px] shadow-2xl overflow-hidden relative flex flex-col font-sans">
-        <main className="flex-grow overflow-y-auto p-6 scroll-smooth scroll-container">
+        <main className="flex-1 p-6 flex flex-col overflow-hidden">
           {renderScreen()}
         </main>
         
@@ -76,10 +106,12 @@ const App: React.FC = () => {
         
         {isModalOpen && (
           <AddExpenseModal 
-            onClose={() => setIsModalOpen(false)} 
-            onAddExpense={handleAddExpense} 
+            onClose={handleCloseModal} 
+            onSaveExpense={handleSaveExpense}
+            expenseToEdit={editingExpense}
           />
         )}
+        {!userName && <WelcomeModal onSaveName={setUserName} />}
       </div>
     </div>
   );

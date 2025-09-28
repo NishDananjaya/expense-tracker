@@ -1,20 +1,33 @@
-import React, { useState } from 'react';
-import { Category } from '../types';
+import React, { useState, useEffect } from 'react';
+import { Category, Expense } from '../types';
 import { CATEGORIES_CONFIG } from '../constants';
 
 interface AddExpenseModalProps {
   onClose: () => void;
-  onAddExpense: (expense: { amount: number; category: Category; notes: string }) => void;
+  onSaveExpense: (expense: Omit<Expense, 'date'>) => void;
+  expenseToEdit: Expense | null;
 }
 
-const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ onClose, onAddExpense }) => {
+const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ onClose, onSaveExpense, expenseToEdit }) => {
   const [amount, setAmount] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [notes, setNotes] = useState('');
 
+  const isEditing = expenseToEdit !== null;
+
+  useEffect(() => {
+    if (isEditing) {
+      setAmount(String(expenseToEdit.amount));
+      setSelectedCategory(expenseToEdit.category);
+      setNotes(expenseToEdit.notes);
+    }
+  }, [expenseToEdit, isEditing]);
+
+
   const handleSubmit = () => {
     if (amount && selectedCategory) {
-      onAddExpense({
+      onSaveExpense({
+        id: isEditing ? expenseToEdit.id : Date.now(),
         amount: parseFloat(amount),
         category: selectedCategory,
         notes,
@@ -31,7 +44,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ onClose, onAddExpense
             </svg>
         </button>
         
-        <h2 className="text-2xl font-bold text-center text-gray-800">Add Expense</h2>
+        <h2 className="text-2xl font-bold text-center text-gray-800">{isEditing ? 'Edit Expense' : 'Add Expense'}</h2>
         
         <div>
             <label className="text-sm font-medium text-gray-500">Amount (LKR)</label>
@@ -74,7 +87,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ onClose, onAddExpense
             disabled={!amount || !selectedCategory}
             className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-            Add Expense
+            {isEditing ? 'Save Changes' : 'Add Expense'}
         </button>
       </div>
     </div>

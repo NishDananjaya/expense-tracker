@@ -4,9 +4,10 @@ import { CATEGORIES_CONFIG } from '../constants';
 
 interface DashboardProps {
   expenses: Expense[];
+  onEditExpense: (expense: Expense) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ expenses }) => {
+const Dashboard: React.FC<DashboardProps> = ({ expenses, onEditExpense }) => {
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
 
   const todayExpenses = useMemo(() => 
@@ -30,10 +31,10 @@ const Dashboard: React.FC<DashboardProps> = ({ expenses }) => {
   );
 
   return (
-    <div className="space-y-8 pb-24 animate-fade-in-up">
+    <div className="space-y-6 flex flex-col flex-1 animate-fade-in-up">
       <Header totalToday={totalToday} />
       <CategoryGrid categoryTotals={categoryTotals} />
-      <RecentTransactions expenses={todayExpenses} />
+      <RecentTransactions expenses={todayExpenses} onEditExpense={onEditExpense} />
     </div>
   );
 };
@@ -76,12 +77,12 @@ const CategoryCard: React.FC<{ category: Category; total: number }> = ({ categor
 };
 
 
-const RecentTransactions = React.memo<{ expenses: Expense[] }>(({ expenses }) => (
-  <div>
+const RecentTransactions = React.memo<{ expenses: Expense[], onEditExpense: (expense: Expense) => void }>(({ expenses, onEditExpense }) => (
+  <div className="flex flex-col flex-1">
     <h2 className="text-xl font-semibold text-gray-700 mb-4">Today's Transactions</h2>
-    <div className="space-y-3">
+    <div className="space-y-3 overflow-y-auto flex-1 pb-20">
       {expenses.length > 0 ? expenses.map(expense => (
-        <TransactionItem key={expense.id} expense={expense} />
+        <TransactionItem key={expense.id} expense={expense} onEdit={onEditExpense} />
       )) : (
         <p className="text-center text-gray-500 py-4">No transactions today. Good job!</p>
       )}
@@ -89,7 +90,14 @@ const RecentTransactions = React.memo<{ expenses: Expense[] }>(({ expenses }) =>
   </div>
 ));
 
-const TransactionItem: React.FC<{ expense: Expense }> = ({ expense }) => {
+const EditIcon: React.FC = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+        <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+        <path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" />
+    </svg>
+)
+
+const TransactionItem: React.FC<{ expense: Expense, onEdit: (expense: Expense) => void }> = ({ expense, onEdit }) => {
   const config = CATEGORIES_CONFIG[expense.category];
   return (
     <div className="flex items-center justify-between p-3 bg-white/60 rounded-xl shadow-md border border-white/40">
@@ -102,7 +110,12 @@ const TransactionItem: React.FC<{ expense: Expense }> = ({ expense }) => {
           <p className="text-sm text-gray-500">{expense.notes || 'No notes'}</p>
         </div>
       </div>
-      <p className="font-bold text-gray-800">-LKR {expense.amount.toFixed(2)}</p>
+      <div className="flex items-center space-x-3">
+        <p className="font-bold text-gray-800">-LKR {expense.amount.toFixed(2)}</p>
+        <button onClick={() => onEdit(expense)} className="text-gray-400 hover:text-blue-500 transition-colors">
+            <EditIcon />
+        </button>
+      </div>
     </div>
   );
 }
