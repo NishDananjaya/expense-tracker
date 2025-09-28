@@ -38,22 +38,17 @@ jobs:
         run: npm run build
         working-directory: ./
 
-      # Step 6: Add Android platform if needed and sync
-      - name: Setup Android Platform
-        run: |
-          # Add android platform if it doesn't exist
-          if [ ! -d "android" ]; then
-            npx cap add android
-          fi
-          npx cap sync android
+      # Step 6: Sync Capacitor Android
+      - name: Sync Capacitor Android
+        run: npx cap sync android
         working-directory: ./
 
-      # Step 7: Setup Java (required by Gradle)
+      # Step 7: Setup Java JDK 21 (UPDATED from 17 to 21)
       - name: Setup Java JDK
         uses: actions/setup-java@v3
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21  # Changed from 17 to 21
 
       # Step 8: Build Android APK
       - name: Build Android APK
