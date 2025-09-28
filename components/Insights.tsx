@@ -56,6 +56,25 @@ const Insights: React.FC<InsightsProps> = ({ expenses, goal }) => {
     [weekData]
   );
 
+  const RADIAN = Math.PI / 180;
+  const renderCustomizedLabel = ({ cx, cy, midAngle, outerRadius, percent, name }: any) => {
+    const radius = outerRadius + 25; // Place label further out
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    return (
+      <text
+        x={x}
+        y={y}
+        fill="#374151" // text-gray-700
+        textAnchor={x > cx ? 'start' : 'end'}
+        dominantBaseline="central"
+        style={{ fontSize: '13px', fontWeight: 500 }}
+      >
+        {`${name} ${(percent * 100).toFixed(0)}%`}
+      </text>
+    );
+  };
 
   return (
     <div className="space-y-8 pb-24 animate-fade-in-up">
@@ -84,9 +103,11 @@ const Insights: React.FC<InsightsProps> = ({ expenses, goal }) => {
                         border: '1px solid rgba(255, 255, 255, 0.3)',
                         borderRadius: '1rem'
                     }}
+                    itemStyle={{ color: '#1f2937' }}
+                    cursor={{ fill: 'rgba(96, 165, 250, 0.3)' }}
                   />
                   <Legend />
-                  <Bar dataKey="spending" fill="url(#barGradient)" name="Spending (LKR)" radius={[10, 10, 0, 0]} />
+                  <Bar dataKey="spending" fill="url(#barGradient)" name="Spending (LKR)" radius={[10, 10, 0, 0]} animationDuration={800} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -98,19 +119,19 @@ const Insights: React.FC<InsightsProps> = ({ expenses, goal }) => {
         {categoryData.length === 0 ? <EmptyState message="No spending data for category breakdown." /> : (
           <div style={{ width: '100%', height: 300 }}>
               <ResponsiveContainer>
-                  <PieChart>
+                  <PieChart margin={{ top: 20, right: 40, bottom: 20, left: 40 }}>
                   <Pie
                       data={categoryData}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      outerRadius={100}
-                      innerRadius={60}
+                      outerRadius={70}
+                      innerRadius={35}
                       fill="#8884d8"
                       dataKey="value"
                       paddingAngle={5}
-                      // FIX: The `percent` prop from recharts can be undefined. Coalesce to 0 to prevent an arithmetic error.
-                      label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                      animationDuration={800}
+                      label={renderCustomizedLabel}
                   >
                       {categoryData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
@@ -123,6 +144,7 @@ const Insights: React.FC<InsightsProps> = ({ expenses, goal }) => {
                           border: '1px solid rgba(255, 255, 255, 0.3)',
                           borderRadius: '1rem'
                       }}
+                      itemStyle={{ color: '#1f2937' }}
                   />
                   </PieChart>
               </ResponsiveContainer>

@@ -25,6 +25,32 @@
       .animate-fade-in-up {
         animation: fade-in-up 0.5s ease-out forwards;
       }
+      @keyframes slide-in-left {
+        from {
+          opacity: 0;
+          transform: translateX(-100%);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      @keyframes slide-out-right {
+        from {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        to {
+          opacity: 0;
+          transform: translateX(100%);
+        }
+      }
+      .animate-slide-in-left {
+        animation: slide-in-left 0.5s ease-out forwards;
+      }
+      .animate-slide-out-right {
+        animation: slide-out-right 0.5s ease-out forwards;
+      }
     </style>
   <script type="importmap">
 {

@@ -48,18 +48,21 @@ const App: React.FC = () => {
     }
   }, [userName]);
 
-  const handleSaveExpense = useCallback((expenseData: Omit<Expense, 'date'>) => {
+  const handleSaveExpense = useCallback((expenseData: Omit<Expense, 'date' | 'id'> & { id?: number }) => {
     setExpenses(prevExpenses => {
-      const isEditing = expenseData.id !== undefined;
-      if (isEditing) {
+      if (expenseData.id !== undefined) {
+        // Editing existing expense
         return prevExpenses.map(exp => 
-          exp.id === expenseData.id ? { ...exp, ...expenseData, date: exp.date } : exp
+          exp.id === expenseData.id ? { ...exp, ...expenseData } : exp
         );
       } else {
+        // Adding new expense
         const newExpense: Expense = {
-          ...expenseData,
           id: Date.now(),
           date: new Date().toISOString().split('T')[0],
+          amount: expenseData.amount,
+          category: expenseData.category,
+          notes: expenseData.notes,
         };
         return [newExpense, ...prevExpenses];
       }
@@ -93,8 +96,8 @@ const App: React.FC = () => {
 
   return (
     <div className="bg-gray-100 min-h-screen flex items-center justify-center">
-      <div className="w-full max-w-[420px] h-[850px] bg-gradient-to-br from-white via-blue-50 to-purple-50 rounded-[40px] shadow-2xl overflow-hidden relative flex flex-col font-sans">
-        <main className="flex-1 p-6 flex flex-col overflow-hidden">
+      <div className="w-full max-w-[420px] h-screen bg-gradient-to-br from-white via-blue-50 to-purple-50 rounded-[40px] shadow-2xl overflow-hidden relative flex flex-col font-sans">
+        <main className="flex-1 p-6 flex flex-col overflow-y-auto">
           {renderScreen()}
         </main>
         

@@ -4,7 +4,7 @@ import { CATEGORIES_CONFIG } from '../constants';
 
 interface AddExpenseModalProps {
   onClose: () => void;
-  onSaveExpense: (expense: Omit<Expense, 'date'>) => void;
+  onSaveExpense: (expense: Omit<Expense, 'date' | 'id'> & { id?: number }) => void;
   expenseToEdit: Expense | null;
 }
 
@@ -27,7 +27,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ onClose, onSaveExpens
   const handleSubmit = () => {
     if (amount && selectedCategory) {
       onSaveExpense({
-        id: isEditing ? expenseToEdit.id : Date.now(),
+        ...(isEditing ? { id: expenseToEdit.id } : {}),
         amount: parseFloat(amount),
         category: selectedCategory,
         notes,
