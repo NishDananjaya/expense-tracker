@@ -53,20 +53,20 @@ const AiAssistant: React.FC<AiAssistantProps> = ({ expenses, earnings, userName,
             const ai = new GoogleGenAI({ apiKey: apiKey });
             
             const financialDataSummary = `
-                Here is a summary of the user's recent financial data (in LKR). Use this data to answer the user's question:
                 - Total Expenses Recorded: ${expenses.length}
                 - Total Earnings Recorded: ${earnings.length}
                 - Recent 20 Expenses (oldest to newest): ${JSON.stringify(expenses.slice(0, 20).reverse())}
                 - Recent 20 Earnings (oldest to newest): ${JSON.stringify(earnings.slice(0, 20).reverse())}
             `;
 
-            const systemInstruction = `You are a friendly and insightful financial assistant named 'Luxe' for the 'Luxe Expense Tracker' app. The user's name is ${userName || 'not set'}. You must analyze the user's spending and earning data provided to give personalized, helpful, and encouraging advice. Keep your responses concise, easy to understand, and use emojis to make it engaging. The currency is LKR (Sri Lankan Rupees). Do not just list data, provide insights based on the data. Be proactive and suggest areas for improvement.`;
-
-            const userContent = `${financialDataSummary}\n\nUser's question: ${currentInput}`;
+            const systemInstruction = `You are a friendly and insightful financial assistant named 'Luxe' for the 'Luxe Expense Tracker' app. The user's name is ${userName || 'not set'}. You must analyze the user's spending and earning data provided to give personalized, helpful, and encouraging advice. Keep your responses concise, easy to understand, and use emojis to make it engaging. The currency is LKR (Sri Lankan Rupees). Do not just list data, provide insights based on the data. Be proactive and suggest areas for improvement.
+            
+Here is a summary of the user's recent financial data (in LKR). Use this data to answer their question:
+${financialDataSummary}`;
             
             const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
-                contents: userContent,
+                contents: currentInput,
                 config: {
                     systemInstruction: systemInstruction,
                 },
