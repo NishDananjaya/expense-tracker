@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Expense, Goal, Screen } from './types';
 import BottomNav from './components/BottomNav';
 import Dashboard from './components/Dashboard';
@@ -9,8 +9,34 @@ import AddExpenseModal from './components/AddExpenseModal';
 const App: React.FC = () => {
   const [activeScreen, setActiveScreen] = useState<Screen>(Screen.Home);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [goal, setGoal] = useState<Goal>({ daily: 100, weekly: 700 });
+  
+  const [expenses, setExpenses] = useState<Expense[]>(() => {
+    try {
+      const savedExpenses = localStorage.getItem('expenses');
+      return savedExpenses ? JSON.parse(savedExpenses) : [];
+    } catch (error) {
+      console.error("Failed to parse expenses from localStorage", error);
+      return [];
+    }
+  });
+
+  const [goal, setGoal] = useState<Goal>(() => {
+    try {
+      const savedGoal = localStorage.getItem('goal');
+      return savedGoal ? JSON.parse(savedGoal) : { daily: 100, weekly: 700 };
+    } catch (error) {
+      console.error("Failed to parse goal from localStorage", error);
+      return { daily: 100, weekly: 700 };
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('expenses', JSON.stringify(expenses));
+  }, [expenses]);
+
+  useEffect(() => {
+    localStorage.setItem('goal', JSON.stringify(goal));
+  }, [goal]);
 
   const handleAddExpense = useCallback((expense: Omit<Expense, 'id' | 'date'>) => {
     const newExpense: Expense = {
