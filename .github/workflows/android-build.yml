@@ -20,16 +20,17 @@ jobs:
         with:
           node-version: 18
 
-      # Step 3: Install dependencies (including Capacitor)
+      # Step 3: Install dependencies (FIXED: using npm install instead of ci)
       - name: Install dependencies
-        run: npm ci   # ci is better for CI/CD
-        working-directory: ./    # replace if your project is in subfolder
+        run: npm install
+        working-directory: ./
 
       # Step 4: Build web assets (Vite)
       - name: Build web assets
         run: npm run build
         working-directory: ./
 
+      # Rest of your workflow remains the same...
       # Step 5: Ensure Capacitor Android platform exists
       - name: Install Capacitor Android
         run: npm install @capacitor/android
