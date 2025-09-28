@@ -1,80 +1,79 @@
 import React, { useMemo } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
-import { Expense, Category, Goal } from '../types';
-import { CATEGORIES_CONFIG, FINANCIAL_TIPS } from '../constants';
+import { Expense, Category, Goal, Earning, EarningSource } from '../types';
+import { CATEGORIES_CONFIG, FINANCIAL_TIPS, EARNING_SOURCES_CONFIG } from '../constants';
 
 interface InsightsProps {
   expenses: Expense[];
+  earnings: Earning[];
   goal: Goal;
 }
 
-const EmptyState: React.FC<{ message: string }> = ({ message }) => (
-    <div className="text-center py-10 h-64 flex items-center justify-center">
-        <p className="text-gray-500">{message}</p>
+const ProgressBar: React.FC<{ color: string; percentage: number }> = ({ color, percentage }) => (
+    <div className="w-full bg-gray-200 rounded-full h-2.5">
+        <div className="h-2.5 rounded-full" style={{ width: `${percentage}%`, backgroundColor: color }}></div>
     </div>
 );
 
-const Insights: React.FC<InsightsProps> = ({ expenses, goal }) => {
-  const categoryData = useMemo(() => 
-    Object.values(Category).map(category => {
+const BreakdownItem: React.FC<{ icon: string; name: string; total: number; maxTotal: number; color: string; }> = ({ icon, name, total, maxTotal, color }) => {
+    const percentage = maxTotal > 0 ? (total / maxTotal) * 100 : 0;
+    
+    return (
+        <div className="space-y-2">
+            <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-2">
+                    <span className="text-lg">{icon}</span>
+                    <span className="font-semibold text-gray-700">{name}</span>
+                </div>
+                <span className="font-bold text-gray-800">LKR {total.toFixed(2)}</span>
+            </div>
+            <ProgressBar color={color} percentage={percentage} />
+        </div>
+    );
+};
+
+const Insights: React.FC<InsightsProps> = ({ expenses, earnings, goal }) => {
+  const { categoryData, totalSpending, earningData, totalEarnings } = useMemo(() => {
+    const catData = Object.values(Category).map(category => {
       const total = expenses
         .filter(e => e.category === category)
         .reduce((sum, e) => sum + e.amount, 0);
       return { name: category, value: total };
-    }).filter(d => d.value > 0),
-    [expenses]
-  );
-  
-  const colors = useMemo(() => 
-    categoryData.map(d => CATEGORIES_CONFIG[d.name as Category].color),
-    [categoryData]
-  );
-
-  const weekData = useMemo(() => {
-    const data = Array(7).fill(0).map((_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      return {
-        name: d.toLocaleDateString('en-US', { weekday: 'short' }),
-        spending: 0,
-        date: d.toISOString().split('T')[0]
-      };
-    }).reverse();
-
-    expenses.forEach(expense => {
-      const expenseDate = expense.date;
-      const dayData = data.find(d => d.date === expenseDate);
-      if (dayData) {
-        dayData.spending += expense.amount;
-      }
     });
-    return data;
+    
+    const spendingTotal = catData.reduce((sum, item) => sum + item.value, 0);
+
+    const earnData = Object.values(EarningSource).map(source => {
+        const total = earnings
+          .filter(e => e.source === source)
+          .reduce((sum, e) => sum + e.amount, 0);
+        return { name: source, value: total };
+      });
+      
+    const earningsTotal = earnData.reduce((sum, item) => sum + item.value, 0);
+
+    return { 
+        categoryData: catData.filter(d => d.value > 0), 
+        totalSpending: spendingTotal,
+        earningData: earnData.filter(d => d.value > 0),
+        totalEarnings: earningsTotal,
+    };
+  }, [expenses, earnings]);
+  
+  const weeklyTotal = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+
+    return expenses
+      .filter(e => {
+        const [y, m, d] = e.date.split('-').map(Number);
+        const expenseDate = new Date(y, m - 1, d);
+        return expenseDate >= startOfWeek;
+      })
+      .reduce((sum, e) => sum + e.amount, 0);
   }, [expenses]);
-
-  const weeklyTotal = useMemo(() => 
-    weekData.reduce((sum, day) => sum + day.spending, 0),
-    [weekData]
-  );
-
-  const RADIAN = Math.PI / 180;
-  const renderCustomizedLabel = ({ cx, cy, midAngle, outerRadius, percent, name }: any) => {
-    const radius = outerRadius + 25; // Place label further out
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-    return (
-      <text
-        x={x}
-        y={y}
-        fill="#374151" // text-gray-700
-        textAnchor={x > cx ? 'start' : 'end'}
-        dominantBaseline="central"
-        style={{ fontSize: '13px', fontWeight: 500 }}
-      >
-        {`${name} ${(percent * 100).toFixed(0)}%`}
-      </text>
-    );
-  };
 
   return (
     <div className="space-y-8 pb-24 animate-fade-in-up">
@@ -82,76 +81,52 @@ const Insights: React.FC<InsightsProps> = ({ expenses, goal }) => {
 
       <MotivationalMessage weeklyTotal={weeklyTotal} goal={goal} />
 
-      <div className="bg-white/50 p-4 rounded-2xl shadow-lg border border-white/30">
-        <h2 className="text-xl font-semibold text-gray-700 mb-2">Weekly Spending</h2>
-         {expenses.length === 0 ? <EmptyState message="Add some expenses to see your weekly spending." /> : (
-            <div className="w-full h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={weekData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
-                  <defs>
-                    <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#60A5FA" />
-                      <stop offset="100%" stopColor="#A78BFA" />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="name" stroke="#6b7280" />
-                  <YAxis stroke="#6b7280" />
-                  <Tooltip
-                    contentStyle={{
-                        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                        backdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(255, 255, 255, 0.3)',
-                        borderRadius: '1rem'
-                    }}
-                    itemStyle={{ color: '#1f2937' }}
-                    cursor={{ fill: 'rgba(96, 165, 250, 0.3)' }}
-                  />
-                  <Legend />
-                  <Bar dataKey="spending" fill="url(#barGradient)" name="Spending (LKR)" radius={[10, 10, 0, 0]} animationDuration={800} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-        )}
-      </div>
-
-      <div className="bg-white/50 p-4 rounded-2xl shadow-lg border border-white/30">
-        <h2 className="text-xl font-semibold text-gray-700 mb-2">Category Breakdown</h2>
-        {categoryData.length === 0 ? <EmptyState message="No spending data for category breakdown." /> : (
-          <div style={{ width: '100%', height: 300 }}>
-              <ResponsiveContainer>
-                  <PieChart margin={{ top: 20, right: 40, bottom: 20, left: 40 }}>
-                  <Pie
-                      data={categoryData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={70}
-                      innerRadius={35}
-                      fill="#8884d8"
-                      dataKey="value"
-                      paddingAngle={5}
-                      animationDuration={800}
-                      label={renderCustomizedLabel}
-                  >
-                      {categoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-                      ))}
-                  </Pie>
-                  <Tooltip 
-                      contentStyle={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                          backdropFilter: 'blur(10px)',
-                          border: '1px solid rgba(255, 255, 255, 0.3)',
-                          borderRadius: '1rem'
-                      }}
-                      itemStyle={{ color: '#1f2937' }}
-                  />
-                  </PieChart>
-              </ResponsiveContainer>
-          </div>
-        )}
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/80">
+        <h2 className="text-xl font-semibold text-gray-700 mb-4">Category Breakdown</h2>
+        <div className="space-y-4">
+            {categoryData.length > 0 ? (
+                categoryData.map(item => {
+                    const config = CATEGORIES_CONFIG[item.name as Category];
+                    return (
+                        <BreakdownItem 
+                            key={item.name} 
+                            name={item.name}
+                            icon={config.icon}
+                            total={item.value}
+                            maxTotal={totalSpending}
+                            color={config.color}
+                        />
+                    )
+                })
+            ) : (
+                 <p className="text-center text-gray-500 py-4">No spending data for category breakdown.</p>
+            )}
+        </div>
       </div>
       
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/80">
+        <h2 className="text-xl font-semibold text-gray-700 mb-4">Earning Source Breakdown</h2>
+        <div className="space-y-4">
+            {earningData.length > 0 ? (
+                earningData.map(item => {
+                    const config = EARNING_SOURCES_CONFIG[item.name as EarningSource];
+                    return (
+                        <BreakdownItem 
+                            key={item.name} 
+                            name={item.name}
+                            icon={config.icon}
+                            total={item.value}
+                            maxTotal={totalEarnings}
+                            color={config.color}
+                        />
+                    )
+                })
+            ) : (
+                 <p className="text-center text-gray-500 py-4">No income data for breakdown.</p>
+            )}
+        </div>
+      </div>
+
       <TipsCarousel />
     </div>
   );
@@ -166,7 +141,7 @@ const MotivationalMessage = React.memo<{ weeklyTotal: number, goal: Goal }>(({ w
     }
 
     return (
-        <div className="bg-gradient-to-r from-blue-400 to-purple-500 text-white p-4 rounded-2xl shadow-lg text-center">
+        <div className="bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 text-white p-4 rounded-2xl shadow-lg text-center">
             <p className="font-semibold">{message}</p>
         </div>
     );
@@ -180,12 +155,12 @@ const TipsCarousel: React.FC = () => {
     };
 
     return (
-        <div className="bg-white/50 p-4 rounded-2xl shadow-lg border border-white/30 relative">
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-200/80 relative">
             <h2 className="text-xl font-semibold text-gray-700 mb-2">Financial Hacks</h2>
             <p className="text-gray-600 min-h-[60px]">{FINANCIAL_TIPS[currentTip]}</p>
             <button 
                 onClick={nextTip}
-                className="absolute bottom-4 right-4 bg-white/50 w-8 h-8 rounded-full flex items-center justify-center text-gray-600 shadow-md hover:bg-white transition-colors"
+                className="absolute bottom-4 right-4 bg-gray-100 w-8 h-8 rounded-full flex items-center justify-center text-gray-600 shadow-sm hover:bg-gray-200 transition-colors"
             >
                 →
             </button>

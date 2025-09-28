@@ -44,7 +44,7 @@ const Profile: React.FC<ProfileProps> = ({ goal, setGoal, userName }) => {
   return (
     <div className="space-y-8 pb-24 animate-fade-in-up">
       <div className="flex flex-col items-center text-center space-y-2">
-        <div className="w-28 h-28 rounded-full shadow-lg border-4 border-white bg-gradient-to-br from-blue-200 to-purple-200 flex items-center justify-center">
+        <div className="w-28 h-28 rounded-full shadow-lg border-4 border-white bg-gradient-to-br from-yellow-400 via-pink-500 to-purple-600 flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-white" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
             </svg>
@@ -55,7 +55,7 @@ const Profile: React.FC<ProfileProps> = ({ goal, setGoal, userName }) => {
         </div>
       </div>
 
-      <div className="bg-white/60 p-6 rounded-2xl shadow-lg backdrop-blur-sm border border-white/30">
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/80">
         <h2 className="text-2xl font-semibold text-gray-700 mb-4">Spending Goals</h2>
         <div className="space-y-4">
           <div>
@@ -64,7 +64,7 @@ const Profile: React.FC<ProfileProps> = ({ goal, setGoal, userName }) => {
               type="number"
               value={localGoal.daily}
               onChange={(e) => setLocalGoal(g => ({ ...g, daily: Number(e.target.value) }))}
-              className="w-full p-3 mt-1 bg-white/80 rounded-lg border-2 border-transparent text-gray-800 focus:border-blue-500 focus:outline-none transition-all"
+              className="w-full p-3 mt-1 bg-gray-100 rounded-lg border-2 border-transparent text-gray-800 focus:border-pink-500 focus:outline-none focus:bg-white transition-all"
               placeholder="e.g., 100"
             />
           </div>
@@ -74,19 +74,19 @@ const Profile: React.FC<ProfileProps> = ({ goal, setGoal, userName }) => {
               type="number"
               value={localGoal.weekly}
               onChange={(e) => setLocalGoal(g => ({ ...g, weekly: Number(e.target.value) }))}
-              className="w-full p-3 mt-1 bg-white/80 rounded-lg border-2 border-transparent text-gray-800 focus:border-blue-500 focus:outline-none transition-all"
+              className="w-full p-3 mt-1 bg-gray-100 rounded-lg border-2 border-transparent text-gray-800 focus:border-pink-500 focus:outline-none focus:bg-white transition-all"
               placeholder="e.g., 700"
             />
           </div>
         </div>
         <button 
           onClick={handleSave}
-          className="w-full mt-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300">
+          className="w-full mt-6 py-3 bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300">
           {isSaved ? 'Saved!' : 'Save Goals'}
         </button>
       </div>
       
-      <div className="bg-white/60 p-6 rounded-2xl shadow-lg backdrop-blur-sm border border-white/30">
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/80">
         <h2 className="text-2xl font-semibold text-gray-700 mb-4">Tips to Reduce Expenses</h2>
         <div className="overflow-hidden min-h-[60px] flex items-center">
             <div className={`flex items-start w-full space-x-3 ${isTipVisible ? 'animate-slide-in-left' : 'animate-slide-out-right'}`}>

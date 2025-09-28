@@ -1,4 +1,4 @@
-import { Category, Expense } from './types';
+import { Category, EarningSource, Expense } from './types';
 
 export const CATEGORIES_CONFIG: { [key in Category]: { icon: string; color: string; gradient: string } } = {
   [Category.Food]: {
@@ -27,6 +27,34 @@ export const CATEGORIES_CONFIG: { [key in Category]: { icon: string; color: stri
     gradient: 'from-purple-400 to-pink-400',
   },
 };
+
+export const EARNING_SOURCES_CONFIG: { [key in EarningSource]: { icon: string; color: string; gradient: string } } = {
+    [EarningSource.Salary]: {
+      icon: '💼',
+      color: '#4CAF50',
+      gradient: 'from-green-400 to-lime-400',
+    },
+    [EarningSource.Freelance]: {
+      icon: '💻',
+      color: '#2196F3',
+      gradient: 'from-blue-400 to-sky-400',
+    },
+    [EarningSource.Investment]: {
+      icon: '📈',
+      color: '#FFC107',
+      gradient: 'from-amber-400 to-yellow-400',
+    },
+    [EarningSource.Gift]: {
+      icon: '🎁',
+      color: '#E91E63',
+      gradient: 'from-pink-500 to-rose-500',
+    },
+    [EarningSource.Other]: {
+      icon: '💰',
+      color: '#9E9E9E',
+      gradient: 'from-gray-400 to-slate-400',
+    },
+  };
 
 export const sampleExpenses: Expense[] = [];
 

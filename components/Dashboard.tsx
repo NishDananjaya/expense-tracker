@@ -1,25 +1,53 @@
-import React, { useMemo } from 'react';
-import { Expense, Category } from '../types';
-import { CATEGORIES_CONFIG } from '../constants';
+import React, { useMemo, useState } from 'react';
+import { Expense, Category, Earning, EarningSource } from '../types';
+import { CATEGORIES_CONFIG, EARNING_SOURCES_CONFIG } from '../constants';
 
 interface DashboardProps {
   expenses: Expense[];
+  earnings: Earning[];
   onEditExpense: (expense: Expense) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ expenses, onEditExpense }) => {
-  const today = useMemo(() => new Date().toISOString().split('T')[0], []);
+type Transaction = (Expense & { type: 'expense' }) | (Earning & { type: 'earning' });
 
-  const todayExpenses = useMemo(() => 
-    expenses.filter(e => e.date === today),
-    [expenses, today]
-  );
+const Dashboard: React.FC<DashboardProps> = ({ expenses, earnings, onEditExpense }) => {
+  const [activeView, setActiveView] = useState<'today' | 'month'>('today');
+
+  const { transactions, totals } = useMemo(() => {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    
+    const allTransactions: Transaction[] = [
+        ...expenses.map(e => ({ ...e, type: 'expense' as const })),
+        ...earnings.map(e => ({ ...e, type: 'earning' as const }))
+    ].sort((a, b) => b.id - a.id);
+
+    const getTotals = (filterFn: (dateStr: string) => boolean) => {
+        const filteredExpenses = expenses.filter(e => filterFn(e.date));
+        const filteredEarnings = earnings.filter(e => filterFn(e.date));
+
+        const totalExpenses = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
+        const totalEarnings = filteredEarnings.reduce((sum, e) => sum + e.amount, 0);
+
+        return {
+            expenses: totalExpenses,
+            earnings: totalEarnings,
+            balance: totalEarnings - totalExpenses
+        };
+    };
+
+    const todayTotals = getTotals(date => date === todayStr);
+    const monthTotals = getTotals(date => {
+        const [y, m] = date.split('-');
+        return new Date().getFullYear() === Number(y) && (new Date().getMonth() + 1) === Number(m);
+    });
+
+    return { 
+        transactions: allTransactions.filter(t => t.date === todayStr),
+        totals: { today: todayTotals, month: monthTotals }
+    };
+  }, [expenses, earnings]);
   
-  const totalToday = useMemo(() => 
-    todayExpenses.reduce((sum, e) => sum + e.amount, 0),
-    [todayExpenses]
-  );
-
   const categoryTotals = useMemo(() => 
     Object.values(Category).reduce((acc, category) => {
       acc[category] = expenses
@@ -32,59 +60,92 @@ const Dashboard: React.FC<DashboardProps> = ({ expenses, onEditExpense }) => {
 
   return (
     <div className="space-y-6 flex flex-col flex-1 animate-fade-in-up">
-      <Header totalToday={totalToday} />
-      <CategoryGrid categoryTotals={categoryTotals} />
-      <RecentTransactions expenses={todayExpenses} onEditExpense={onEditExpense} />
+       <Header 
+        totals={activeView === 'today' ? totals.today : totals.month}
+        activeView={activeView} 
+        setActiveView={setActiveView} 
+      />
+      <CategoryStories categoryTotals={categoryTotals} />
+      <RecentTransactions transactions={transactions} onEditExpense={onEditExpense} />
     </div>
   );
 };
 
-const Header = React.memo<{ totalToday: number }>(({ totalToday }) => (
-  <div className="text-center">
-    <p className="text-gray-500 text-lg">Today's Spending</p>
-    <h1 className="text-5xl font-bold text-gray-800 tracking-tighter">
-      LKR {totalToday.toFixed(2)}
-    </h1>
-  </div>
-));
+interface HeaderProps {
+    totals: { earnings: number, expenses: number, balance: number };
+    activeView: 'today' | 'month';
+    setActiveView: (view: 'today' | 'month') => void;
+}
 
-const CategoryGrid = React.memo<{ categoryTotals: Record<Category, number> }>(({ categoryTotals }) => (
+const Header: React.FC<HeaderProps> = ({ totals, activeView, setActiveView }) => {
+    return (
+        <div className="text-center space-y-4">
+            <div className="flex justify-center space-x-8">
+                <button onClick={() => setActiveView('today')} className={`text-lg font-semibold transition-all duration-300 relative pb-1 ${activeView === 'today' ? 'text-gray-900' : 'text-gray-400'}`}>
+                    Today
+                    {activeView === 'today' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900"></div>}
+                </button>
+                <button onClick={() => setActiveView('month')} className={`text-lg font-semibold transition-all duration-300 relative pb-1 ${activeView === 'month' ? 'text-gray-900' : 'text-gray-400'}`}>
+                    This Month
+                    {activeView === 'month' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900"></div>}
+                </button>
+            </div>
+            <div>
+                 <p className="text-gray-500 text-lg">Net Balance</p>
+                 <h1 className="text-5xl font-bold text-gray-800 tracking-tighter">
+                    LKR {totals.balance.toFixed(2)}
+                </h1>
+            </div>
+            <div className="flex justify-around items-center pt-2">
+                <div className="text-center">
+                    <p className="text-gray-500 text-sm">Income</p>
+                    <p className="font-bold text-lg text-green-500">LKR {totals.earnings.toFixed(2)}</p>
+                </div>
+                <div className="text-center">
+                    <p className="text-gray-500 text-sm">Expenses</p>
+                    <p className="font-bold text-lg text-red-500">LKR {totals.expenses.toFixed(2)}</p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const CategoryStories = React.memo<{ categoryTotals: Record<Category, number> }>(({ categoryTotals }) => (
     <div>
         <h2 className="text-xl font-semibold text-gray-700 mb-4">Categories</h2>
-        <div className="grid grid-cols-2 gap-5">
-        {Object.entries(categoryTotals).map(([category, total]) => (
-            <CategoryCard key={category} category={category as Category} total={total} />
-        ))}
+        <div className="flex space-x-4 overflow-x-auto pb-3 -mx-6 px-6">
+            {Object.entries(categoryTotals)
+                .filter(([, total]) => total > 0)
+                .map(([category, total]) => (
+                <CategoryStoryItem key={category} category={category as Category} total={total} />
+            ))}
         </div>
     </div>
 ));
 
-const CategoryCard: React.FC<{ category: Category; total: number }> = ({ category, total }) => {
-  const config = CATEGORIES_CONFIG[category];
-  return (
-    <div className="bg-white/70 p-4 rounded-2xl shadow-lg border border-white/40 transform hover:-translate-y-1.5 transition-transform duration-300">
-      <div className="flex items-center space-x-3">
-        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl bg-gradient-to-br ${config.gradient} shadow-inner`}>
-          {config.icon}
+const CategoryStoryItem: React.FC<{ category: Category; total: number }> = ({ category, total }) => {
+    const config = CATEGORIES_CONFIG[category];
+    return (
+        <div className="flex flex-col items-center space-y-2 flex-shrink-0 w-20">
+            <div className="w-16 h-16 rounded-full p-1 bg-gradient-to-br from-yellow-400 via-pink-500 to-purple-600">
+                <div className="w-full h-full bg-white rounded-full flex items-center justify-center text-2xl">
+                    {config.icon}
+                </div>
+            </div>
+            <p className="text-xs text-gray-700 font-semibold truncate w-full text-center">{category}</p>
         </div>
-        <div>
-          <p className="font-semibold text-gray-700">{category}</p>
-          <p className="font-bold text-lg text-gray-900">LKR {total.toFixed(2)}</p>
-        </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 
-const RecentTransactions = React.memo<{ expenses: Expense[], onEditExpense: (expense: Expense) => void }>(({ expenses, onEditExpense }) => (
+const RecentTransactions = React.memo<{ transactions: Transaction[], onEditExpense: (expense: Expense) => void }>(({ transactions, onEditExpense }) => (
   <div className="flex flex-col flex-1">
-    <h2 className="text-xl font-semibold text-gray-700 mb-4">Today's Transactions</h2>
-    <div className="space-y-3 overflow-y-auto flex-1 pb-20">
-      {expenses.length > 0 ? expenses.map(expense => (
-        <TransactionItem key={expense.id} expense={expense} onEdit={onEditExpense} />
+    <h2 className="text-xl font-semibold text-gray-700 mb-2">Today's Transactions</h2>
+    <div className="space-y-0 overflow-y-auto flex-1 pb-20 -mx-6 px-6">
+      {transactions.length > 0 ? transactions.map(transaction => (
+        <TransactionItem key={`${transaction.type}-${transaction.id}`} transaction={transaction} onEdit={onEditExpense} />
       )) : (
-        <p className="text-center text-gray-500 py-4">No transactions today. Good job!</p>
+        <p className="text-center text-gray-500 py-8">No transactions today.</p>
       )}
     </div>
   </div>
@@ -97,24 +158,32 @@ const EditIcon: React.FC = () => (
     </svg>
 )
 
-const TransactionItem: React.FC<{ expense: Expense, onEdit: (expense: Expense) => void }> = ({ expense, onEdit }) => {
-  const config = CATEGORIES_CONFIG[expense.category];
+const TransactionItem: React.FC<{ transaction: Transaction, onEdit: (expense: Expense) => void }> = ({ transaction, onEdit }) => {
+  const isExpense = transaction.type === 'expense';
+  const config = isExpense ? CATEGORIES_CONFIG[transaction.category] : EARNING_SOURCES_CONFIG[transaction.source];
+  const title = transaction.notes || (isExpense ? transaction.category : transaction.source);
+  const subtitle = transaction.notes ? (isExpense ? transaction.category : transaction.source) : null;
+  const amountPrefix = isExpense ? '-' : '+';
+  const amountColor = isExpense ? 'text-gray-800' : 'text-green-600';
+
   return (
-    <div className="flex items-center justify-between p-3 bg-white/60 rounded-xl shadow-md border border-white/40">
+    <div className="flex items-center justify-between py-3 border-b border-gray-200/80">
       <div className="flex items-center space-x-4">
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl bg-gradient-to-br ${config.gradient}`}>
-          {config.icon}
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl`} style={{backgroundColor: config.color + '20'}}>
+            <span className="text-lg">{config.icon}</span>
         </div>
         <div>
-          <p className="font-semibold text-gray-800">{expense.category}</p>
-          <p className="text-sm text-gray-500">{expense.notes || 'No notes'}</p>
+          <p className="font-semibold text-gray-800">{title}</p>
+          {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
         </div>
       </div>
       <div className="flex items-center space-x-3">
-        <p className="font-bold text-gray-800">-LKR {expense.amount.toFixed(2)}</p>
-        <button onClick={() => onEdit(expense)} className="text-gray-400 hover:text-blue-500 transition-colors">
-            <EditIcon />
-        </button>
+        <p className={`font-bold ${amountColor}`}>{amountPrefix}LKR {transaction.amount.toFixed(2)}</p>
+        {isExpense && (
+            <button onClick={() => onEdit(transaction)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <EditIcon />
+            </button>
+        )}
       </div>
     </div>
   );
