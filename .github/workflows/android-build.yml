@@ -20,12 +20,23 @@ jobs:
         with:
           node-version: 18
 
-      # Step 3: Install dependencies
+      # Step 3: Cache dependencies
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            **/node_modules
+            ~/.gradle/caches
+          key: ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+
+      # Step 4: Install dependencies
       - name: Install dependencies
         run: npm install
         working-directory: ./
 
-      # Step 4: Install Capacitor CLI and Android platform
+      # Step 5: Install Capacitor CLI and Android platform
       - name: Install Capacitor
         run: |
           npm install @capacitor/cli
@@ -33,24 +44,24 @@ jobs:
           npm install @capacitor/core
         working-directory: ./
 
-      # Step 5: Build web assets (Vite)
+      # Step 6: Build web assets (Vite)
       - name: Build web assets
         run: npm run build
         working-directory: ./
 
-      # Step 6: Sync Capacitor Android
+      # Step 7: Sync Capacitor Android
       - name: Sync Capacitor Android
         run: npx cap sync android
         working-directory: ./
 
-      # Step 7: Setup Java JDK 21 (UPDATED from 17 to 21)
+      # Step 8: Setup Java (required by Gradle)
       - name: Setup Java JDK
         uses: actions/setup-java@v3
         with:
           distribution: temurin
-          java-version: 21  # Changed from 17 to 21
+          java-version: 21
 
-      # Step 8: Build Android APK
+      # Step 9: Build Android APK
       - name: Build Android APK
         run: |
           cd android
@@ -58,7 +69,7 @@ jobs:
           ./gradlew clean
           ./gradlew assembleDebug
 
-      # Step 9: Upload APK artifact
+      # Step 10: Upload APK artifact
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
