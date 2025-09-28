@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: 18
 
-      # Step 3: Install dependencies (using npm install instead of ci)
+      # Step 3: Install dependencies
       - name: Install dependencies
         run: npm install
         working-directory: ./
@@ -38,12 +38,11 @@ jobs:
         run: npm run build
         working-directory: ./
 
-      # Step 6: Initialize Capacitor if needed and sync
-      - name: Setup and Sync Capacitor Android
+      # Step 6: Add Android platform if needed and sync
+      - name: Setup Android Platform
         run: |
-          # Check if android folder exists, if not initialize Capacitor
+          # Add android platform if it doesn't exist
           if [ ! -d "android" ]; then
-            npx cap init
             npx cap add android
           fi
           npx cap sync android
