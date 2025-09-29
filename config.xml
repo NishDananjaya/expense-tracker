@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.nishandananjaya.luxeexpensetracker" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>Luxe Expense Tracker</name>
+    <description>
+        A modern, highly attractive personal expense tracker with a light theme and 3D elements to help you visualize your spending and save smarter.
+    </description>
+    <author email="dev@cordova.apache.org" href="https://cordova.apache.org">
+        Nishan Dananjaya
+    </author>
+    <content src="index.html" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    <platform name="android">
+        <preference name="orientation" value="portrait" />
+        <icon src="res/icon/android/icon-ldpi.png" density="ldpi" />
+        <icon src="res/icon/android/icon-mdpi.png" density="mdpi" />
+        <icon src="res/icon/android/icon-hdpi.png" density="hdpi" />
+        <icon src="res/icon/android/icon-xhdpi.png" density="xhdpi" />
+        <icon src="res/icon/android/icon-xxhdpi.png" density="xxhdpi" />
+        <icon src="res/icon/android/icon-xxxhdpi.png" density="xxxhdpi" />
+    </platform>
+</widget>

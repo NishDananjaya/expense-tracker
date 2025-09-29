@@ -1,0 +1,26 @@
+{
+  "short_name": "Luxe Tracker",
+  "name": "Luxe Expense Tracker",
+  "description": "A modern, highly attractive personal expense tracker with a light theme and 3D elements to help you visualize your spending and save smarter.",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#f3e8ff",
+  "background_color": "#ffffff"
+}
