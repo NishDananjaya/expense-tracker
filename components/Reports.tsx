@@ -66,25 +66,20 @@ const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ expenses, earnings, y
 
     const { dailyNet, maxNet, minNet } = useMemo(() => {
         const netTotals: { [day: number]: number } = {};
-        
-        const filterAndSum = (transactions: (Expense | Earning)[]) => {
-            transactions.filter(t => {
-                const transactionDate = new Date(t.date);
-                transactionDate.setHours(0,0,0,0);
-                const compareDate = new Date(transactionDate.toLocaleString('en-US', { timeZone: 'UTC' }));
-                return compareDate.getUTCFullYear() === year && compareDate.getUTCMonth() === month;
-            }).forEach(t => {
-                const transactionDate = new Date(t.date);
-                transactionDate.setHours(0,0,0,0);
-                const compareDate = new Date(transactionDate.toLocaleString('en-US', { timeZone: 'UTC' }));
-                const day = compareDate.getUTCDate();
-                const amount = 'category' in t ? -t.amount : t.amount;
-                netTotals[day] = (netTotals[day] || 0) + amount;
+
+        const processTransactions = (transactions: (Expense | Earning)[], isExpense: boolean) => {
+            transactions.forEach(t => {
+                const [tYear, tMonth, tDay] = t.date.split('-').map(Number);
+                if (tYear === year && (tMonth - 1) === month) {
+                    const day = tDay;
+                    const amount = isExpense ? -t.amount : t.amount;
+                    netTotals[day] = (netTotals[day] || 0) + amount;
+                }
             });
         };
-        
-        filterAndSum(expenses);
-        filterAndSum(earnings);
+
+        processTransactions(expenses, true);
+        processTransactions(earnings, false);
 
         const allValues = Object.values(netTotals);
         const max = Math.max(0, ...allValues.filter(v => v > 0));

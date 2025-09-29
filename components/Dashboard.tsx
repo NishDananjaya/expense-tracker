@@ -7,16 +7,20 @@ interface DashboardProps {
   earnings: Earning[];
   onEditExpense: (expense: Expense) => void;
   onDeleteExpense: (expenseId: number) => void;
+  userName: string | null;
 }
 
 type Transaction = (Expense & { type: 'expense' }) | (Earning & { type: 'earning' });
 
-const Dashboard: React.FC<DashboardProps> = ({ expenses, earnings, onEditExpense, onDeleteExpense }) => {
+const Dashboard: React.FC<DashboardProps> = ({ expenses, earnings, onEditExpense, onDeleteExpense, userName }) => {
   const [activeView, setActiveView] = useState<'today' | 'month'>('today');
 
   const { transactions, totals } = useMemo(() => {
     const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
     
     const allTransactions: Transaction[] = [
         ...expenses.map(e => ({ ...e, type: 'expense' as const })),
@@ -59,8 +63,18 @@ const Dashboard: React.FC<DashboardProps> = ({ expenses, earnings, onEditExpense
     [expenses]
   );
 
+  const dateString = new Date().toLocaleDateString(undefined, {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
+
   return (
     <div className="space-y-6 flex flex-col flex-1 animate-fade-in-up">
+       <div>
+        <h1 className="text-3xl font-bold text-gray-800">Hello, {userName || 'Friend'}!</h1>
+        <p className="text-gray-500">{dateString}</p>
+       </div>
        <Header 
         totals={activeView === 'today' ? totals.today : totals.month}
         activeView={activeView} 

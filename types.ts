@@ -35,6 +35,8 @@ export interface Goal {
   weekly: number;
 }
 
+export type Budgets = Partial<Record<Category, number>>;
+
 export enum Screen {
     Home = 'Home',
     Insights = 'Insights',

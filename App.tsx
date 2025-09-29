@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Expense, Goal, Screen, Earning } from './types';
+import { Expense, Goal, Screen, Earning, Budgets } from './types';
 import BottomNav from './components/BottomNav';
 import Dashboard from './components/Dashboard';
 import Insights from './components/Insights';
@@ -9,9 +9,17 @@ import AiAssistant from './components/AiAssistant';
 import AddTransactionModal from './components/AddExpenseModal';
 import WelcomeModal from './components/WelcomeModal';
 
+const getLocalDateString = (): string => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const AiIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" viewBox="0 0 24 24" fill="currentColor">
-       <path d="M12,2A10,10,0,0,0,2,12a9.89,9.89,0,0,0,1.5,5.1A1,1,0,0,0,4.9,16h0a1,1,0,0,0,.7-1.71,7.91,7.91,0,0,1,1-.95A8,8,0,1,1,12,20a7.92,7.92,0,0,1-3.66-1,1,1,0,0,0-1.09.21L6,20.41a1,1,0,0,0,.45,1.36A10,10,0,1,0,12,2Zm-1,5a1,1,0,1,0-1,1A1,1,0,0,0,11,7Zm4,0a1,1,0,1,0-1,1A1,1,0,0,0,15,7Zm-4,6a3,3,0,0,0-3,3,1,1,0,0,0,2,0,1,1,0,0,1,2,0,1,1,0,0,0,2,0,3,3,0,0,0-3-3Z"/>
+       <path d="M12,2A10,10,0,0,0,2,12a9.89,9.89,0,0,0,1.5,5.1A1,1,0,0,0,4.9,16h0a1,1,0,0,0,.7-1.71,7.91,7.91,0,0,1,1-.95A8,8,0,1,1,12,20a7.92,7.92,0,0,1,-3.66-1,1,1,0,0,0-1.09.21L6,20.41a1,1,0,0,0,.45,1.36A10,10,0,1,0,12,2Zm-1,5a1,1,0,1,0-1,1A1,1,0,0,0,11,7Zm4,0a1,1,0,1,0-1,1A1,1,0,0,0,15,7Zm-4,6a3,3,0,0,0-3,3,1,1,0,0,0,2,0,1,1,0,0,1,2,0,1,1,0,0,0,2,0,3,3,0,0,0-3-3Z"/>
     </svg>
 );
 
@@ -33,6 +41,7 @@ const App: React.FC = () => {
   const [isAiChatOpen, setIsAiChatOpen] = useState(false);
 
   const [userName, setUserName] = useState<string | null>(() => localStorage.getItem('userName'));
+  const [userAvatar, setUserAvatar] = useState<string | null>(() => localStorage.getItem('userAvatar'));
 
   const [expenses, setExpenses] = useState<Expense[]>(() => {
     try {
@@ -64,6 +73,16 @@ const App: React.FC = () => {
     }
   });
 
+  const [budgets, setBudgets] = useState<Budgets>(() => {
+    try {
+      const savedBudgets = localStorage.getItem('budgets');
+      return savedBudgets ? JSON.parse(savedBudgets) : {};
+    } catch (error) {
+      console.error("Failed to parse budgets from localStorage", error);
+      return {};
+    }
+  });
+
   useEffect(() => {
     localStorage.setItem('expenses', JSON.stringify(expenses));
   }, [expenses]);
@@ -75,12 +94,22 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('goal', JSON.stringify(goal));
   }, [goal]);
+
+  useEffect(() => {
+    localStorage.setItem('budgets', JSON.stringify(budgets));
+  }, [budgets]);
   
   useEffect(() => {
     if (userName) {
       localStorage.setItem('userName', userName);
     }
   }, [userName]);
+  
+  useEffect(() => {
+    if (userAvatar) {
+      localStorage.setItem('userAvatar', userAvatar);
+    }
+  }, [userAvatar]);
 
   const handleSaveExpense = useCallback((expenseData: Omit<Expense, 'date' | 'id'> & { id?: number }) => {
     setExpenses(prevExpenses => {
@@ -93,7 +122,7 @@ const App: React.FC = () => {
         // Adding new expense
         const newExpense: Expense = {
           id: Date.now(),
-          date: new Date().toISOString().split('T')[0],
+          date: getLocalDateString(),
           amount: expenseData.amount,
           category: expenseData.category,
           notes: expenseData.notes,
@@ -109,7 +138,7 @@ const App: React.FC = () => {
     setEarnings(prevEarnings => {
         const newEarning: Earning = {
           id: Date.now(),
-          date: new Date().toISOString().split('T')[0],
+          date: getLocalDateString(),
           ...earningData
         };
         return [newEarning, ...prevEarnings];
@@ -134,21 +163,26 @@ const App: React.FC = () => {
   const renderScreen = () => {
     switch (activeScreen) {
       case Screen.Home:
-        return <Dashboard expenses={expenses} earnings={earnings} onEditExpense={handleEditClick} onDeleteExpense={handleDeleteExpense} />;
+        return <Dashboard userName={userName} expenses={expenses} earnings={earnings} onEditExpense={handleEditClick} onDeleteExpense={handleDeleteExpense} />;
       case Screen.Insights:
-        return <Insights expenses={expenses} earnings={earnings} goal={goal} />;
+        return <Insights expenses={expenses} earnings={earnings} goal={goal} budgets={budgets} />;
       case Screen.Reports:
         return <Reports expenses={expenses} earnings={earnings} />;
       case Screen.Profile:
-        return <Profile goal={goal} setGoal={setGoal} userName={userName} />;
+        return <Profile goal={goal} setGoal={setGoal} userName={userName} userAvatar={userAvatar} budgets={budgets} setBudgets={setBudgets} />;
       default:
-        return <Dashboard expenses={expenses} earnings={earnings} onEditExpense={handleEditClick} onDeleteExpense={handleDeleteExpense} />;
+        return <Dashboard userName={userName} expenses={expenses} earnings={earnings} onEditExpense={handleEditClick} onDeleteExpense={handleDeleteExpense} />;
     }
+  };
+  
+  const handleSaveProfile = (name: string, avatarId: string) => {
+    setUserName(name);
+    setUserAvatar(avatarId);
   };
 
   return (
     <div className="bg-gray-100 min-h-screen flex items-center justify-center">
-      <div className="w-full max-w-[420px] h-screen bg-gradient-to-br from-yellow-50 via-pink-50 to-purple-50 rounded-[40px] shadow-2xl overflow-hidden relative flex flex-col font-sans">
+      <div className="w-full h-screen sm:max-w-[420px] sm:h-[844px] bg-gradient-to-br from-yellow-50 via-pink-50 to-purple-50 sm:rounded-[40px] sm:shadow-2xl overflow-hidden relative flex flex-col font-sans">
         <main className="flex-1 p-6 flex flex-col overflow-y-auto">
           {renderScreen()}
         </main>
@@ -179,7 +213,7 @@ const App: React.FC = () => {
             />
         )}
 
-        {!userName && <WelcomeModal onSaveName={setUserName} />}
+        {!userName && <WelcomeModal onSaveProfile={handleSaveProfile} />}
       </div>
     </div>
   );

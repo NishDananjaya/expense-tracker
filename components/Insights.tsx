@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
-import { Expense, Category, Goal, Earning, EarningSource } from '../types';
+import { Expense, Category, Goal, Earning, EarningSource, Budgets } from '../types';
 import { CATEGORIES_CONFIG, FINANCIAL_TIPS, EARNING_SOURCES_CONFIG } from '../constants';
 
 interface InsightsProps {
   expenses: Expense[];
   earnings: Earning[];
   goal: Goal;
+  budgets: Budgets;
 }
 
 const ProgressBar: React.FC<{ color: string; percentage: number }> = ({ color, percentage }) => (
@@ -31,7 +32,7 @@ const BreakdownItem: React.FC<{ icon: string; name: string; total: number; maxTo
     );
 };
 
-const Insights: React.FC<InsightsProps> = ({ expenses, earnings, goal }) => {
+const Insights: React.FC<InsightsProps> = ({ expenses, earnings, goal, budgets }) => {
   const { categoryData, totalSpending, earningData, totalEarnings } = useMemo(() => {
     const catData = Object.values(Category).map(category => {
       const total = expenses
@@ -80,6 +81,8 @@ const Insights: React.FC<InsightsProps> = ({ expenses, earnings, goal }) => {
       <h1 className="text-3xl font-bold text-gray-800">Insights</h1>
 
       <MotivationalMessage weeklyTotal={weeklyTotal} goal={goal} />
+      
+      <BudgetTracker expenses={expenses} budgets={budgets} />
 
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/80">
         <h2 className="text-xl font-semibold text-gray-700 mb-4">Category Breakdown</h2>
@@ -130,6 +133,67 @@ const Insights: React.FC<InsightsProps> = ({ expenses, earnings, goal }) => {
       <TipsCarousel />
     </div>
   );
+};
+
+const BudgetTracker: React.FC<{ expenses: Expense[], budgets: Budgets }> = ({ expenses, budgets }) => {
+    const monthlySpending = useMemo(() => {
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        
+        const spending: Partial<Record<Category, number>> = {};
+
+        expenses.forEach(expense => {
+            const [y, m] = expense.date.split('-').map(Number);
+            if (y === currentYear && (m - 1) === currentMonth) {
+                spending[expense.category] = (spending[expense.category] || 0) + expense.amount;
+            }
+        });
+        return spending;
+    }, [expenses]);
+    
+    const budgetedCategories = Object.keys(budgets).filter(
+        (cat) => (budgets[cat as Category] ?? 0) > 0
+    ) as Category[];
+
+
+    if (budgetedCategories.length === 0) {
+        return null; 
+    }
+    
+    return (
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/80">
+            <h2 className="text-xl font-semibold text-gray-700 mb-4">Monthly Budget Tracker</h2>
+            <div className="space-y-4">
+                {budgetedCategories.map(category => {
+                    const spent = monthlySpending[category] || 0;
+                    const budget = budgets[category]!;
+                    const percentage = budget > 0 ? (spent / budget) * 100 : 0;
+                    
+                    let progressBarColor = '#4ade80'; // Green
+                    if (percentage > 75) progressBarColor = '#facc15'; // Yellow
+                    if (percentage >= 100) progressBarColor = '#f87171'; // Red
+                    
+                    const config = CATEGORIES_CONFIG[category];
+
+                    return (
+                        <div key={category}>
+                            <div className="flex justify-between items-center mb-1">
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-lg">{config.icon}</span>
+                                    <span className="font-semibold text-gray-700">{category}</span>
+                                </div>
+                                <span className="text-sm font-semibold text-gray-600">
+                                    LKR {spent.toFixed(0)} / <span className="text-gray-500">{budget.toFixed(0)}</span>
+                                </span>
+                            </div>
+                            <ProgressBar color={progressBarColor} percentage={Math.min(percentage, 100)} />
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
 };
 
 const MotivationalMessage = React.memo<{ weeklyTotal: number, goal: Goal }>(({ weeklyTotal, goal }) => {
